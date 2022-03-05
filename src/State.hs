@@ -1,8 +1,13 @@
 module State (
   -- * State
   State (..),
-  Grid,
   defState,
+
+  -- * Grid
+  Grid,
+  MInt,
+  buildMInt,
+
   -- * Manipulating the cursor
   Direction2D (..),
   Direction1D (..),
@@ -12,9 +17,29 @@ module State (
 ) where
 
 import Util
+import Data.Coerce
 
 
-type Grid = [[String]]
+-- | An entry in the matrix; i.e., a "matrix integer".
+newtype MInt = MInt String
+  deriving newtype (Semigroup)
+
+instance Show MInt where
+  show :: MInt -> String
+  show = coerce             -- 'show' for 'String', but without quotes around it.
+
+-- | Try to construct an 'MInt' from a single character.
+buildMInt :: Char -> Maybe MInt
+buildMInt c
+  | c `elem` ("0123456789" :: String) = Just $ MInt [c]
+  | otherwise                         = Nothing
+
+-- | Interpret an 'MInt' as a string and apply a function to it.
+asString :: (String -> String) -> MInt -> MInt
+asString f = coerce . f . coerce
+
+-- | Our grid of numbers.
+type Grid = [[MInt]]
 
 data State = State
   { size :: (Int, Int)  -- ^ Size of the matrix in total
@@ -30,7 +55,7 @@ defState :: State
 defState = State
   { size = (3, 3)                          -- TODO: CLI args or separate TUI window for size
   , pos  = (0, 0)
-  , grid = replicate 3 (replicate 3 "0")
+  , grid = replicate 3 (replicate 3 (MInt "0"))
   }
 
 -- | Directions one can move the cursor in
@@ -57,16 +82,18 @@ data Direction1D = Front | Back
 del :: Direction1D -> State -> State
 del d s = modifyPoint s kill
  where
+  kill :: String -> String
   kill = case d of
     Front -> dropWhile (== '0') . tail
     Back  -> init
 
 -- | Fill in a number at a certain position.
-fill :: Char -> State -> State
-fill n s = modifyPoint s (dropWhile (== '0') . (<> [n]))
+fill :: MInt -> State -> State
+fill n s = modifyPoint s (dropWhile (== '0') . (<> coerce n))
 
 orZero :: String -> String
 orZero num = if null num then "0" else num
 
 modifyPoint :: State -> (String -> String) -> State
-modifyPoint s@State{ pos = (r, c) } f = s & gridL . ix r . ix c %~ orZero . f
+modifyPoint s@State{ pos = (r, c) } f =
+  s & gridL . ix r . ix c %~ asString (orZero . f)

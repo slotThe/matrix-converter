@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1df83475c40435c81a90d53088b8c826d3a80d0fbc8e0e2ad0282580029241cb
+-- hash: 3d765464b7a648ddd2167c0d22dfff582720a8e78d6fb2cc77a560a10e0f4abe
 
 name:                matrix
 version:             0.0.1
@@ -32,6 +32,8 @@ library
       NamedFieldPuns
       OverloadedStrings
       DerivingStrategies
+      GeneralizedNewtypeDeriving
+      InstanceSigs
   ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-prepositive-qualified-module -O2
   build-depends:
       base
@@ -50,6 +52,8 @@ executable matrix
       NamedFieldPuns
       OverloadedStrings
       DerivingStrategies
+      GeneralizedNewtypeDeriving
+      InstanceSigs
   ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-prepositive-qualified-module -O2 -threaded -with-rtsopts=-N
   main-is: Main.hs
   other-modules:

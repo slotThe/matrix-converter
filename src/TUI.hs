@@ -38,21 +38,18 @@ drawTUI State{ grid, pos } = (:[]) $
   drawGuesses :: Grid -> Widget n
   drawGuesses = hBox . imap drawGuess
 
-  drawGuess :: Int -> [String] -> Widget n
+  drawGuess :: Int -> [MInt] -> Widget n
   drawGuess r = vBox . imap \c x ->
     let attr :: Widget n -> Widget n
         attr = if (r, c) == pos then attrSel else attrDef
      -- Highlight the current focus, but not the border around it.
-     in attrDef . pad . attr $ str x
+     in attrDef . pad . attr $ str (show x)
 
 handleEvent :: State -> BrickEvent () e -> EventM () (Next State)
 handleEvent s = \case
   VtyEvent ve -> case ve of
     EvKey (KChar 'q') [] -> halt s           -- catch fire
-    EvKey (KChar k)   [] -> continue $
-      if k `elem` ("0123456789" :: String)
-      then fill k s
-      else s
+    EvKey (KChar k)   [] -> continue $ maybe s (`fill` s) (buildMInt k)
     EvKey KRight      [] -> continue $ move East  s
     EvKey KLeft       [] -> continue $ move West  s
     EvKey KUp         [] -> continue $ move North s
