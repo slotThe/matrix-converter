@@ -51,7 +51,7 @@ handleEvent s = \case
     EvKey (KChar 'q') [] -> halt s           -- catch fire
     EvKey (KChar k)   [] -> continue $
       if k `elem` ("0123456789" :: String)
-      then fill (read [k]) s
+      then fill k s
       else s
     EvKey KRight      [] -> continue $ move East  s
     EvKey KLeft       [] -> continue $ move West  s
