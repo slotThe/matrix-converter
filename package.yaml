@@ -1,0 +1,45 @@
+name:                matrix
+version:             0.0.1
+synopsis:            TODO
+license:             GPL-3
+author:              Solid
+maintainer:          soliditsallgood@mailbox.org
+homepage:            TODO
+
+ghc-options:
+  -Weverything
+  -Wno-implicit-prelude
+  -Wno-missing-import-lists
+  -Wno-unused-packages
+  -Wno-missing-safe-haskell-mode
+  -Wno-all-missed-specialisations
+  -Wno-unsafe
+  -Wno-safe
+  -Wno-prepositive-qualified-module
+  -O2
+
+default-extensions:
+  - StrictData
+  - BlockArguments
+  - LambdaCase
+  - NamedFieldPuns
+  - OverloadedStrings
+  - DerivingStrategies
+
+dependencies:
+  - base
+  - brick
+  - microlens
+  - vty
+
+library:
+  source-dirs: src
+
+executables:
+  matrix:
+    source-dirs: app
+    main: Main.hs
+    dependencies: matrix
+    ghc-options:
+      -threaded
+      -with-rtsopts=-N
