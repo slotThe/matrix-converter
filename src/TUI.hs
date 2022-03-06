@@ -54,6 +54,7 @@ handleEvent s = \case
     EvKey (KChar 'p') [] -> halt $ toPythonMat    s
     EvKey (KChar 'c') [] -> halt $ toClojureArr   s
     -- manipulating the matrix
+    EvKey (KChar '-') [] -> continue $ toggleNeg  s
     EvKey (KChar k)   [] -> continue $ maybe s (`fill` s) (buildMInt k)
     EvKey KRight      [] -> continue $ move East  s
     EvKey KLeft       [] -> continue $ move West  s

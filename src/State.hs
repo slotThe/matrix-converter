@@ -14,6 +14,7 @@ module State (
   move,
   del,
   fill,
+  toggleNeg,
 
   -- * Converting to other representations
   toHaskellLists,
@@ -97,19 +98,30 @@ del d s = modifyPoint s kill
  where
   kill :: String -> String
   kill = case d of
-    Front -> dropWhile (== '0') . tail
+    Front -> tail
     Back  -> init
 
 -- | Fill in a number at a certain position.
 fill :: MInt -> State -> State
-fill n s = modifyPoint s (dropWhile (== '0') . (<> coerce n))
+fill n s = modifyPoint s (<> coerce n)
 
-orZero :: String -> String
-orZero num = if null num then "0" else num
+-- | Toggle a number to be negative.
+toggleNeg :: State -> State
+toggleNeg s = modifyPoint s $ \case
+  '-' : ss -> ss
+  ss       -> '-' : ss
+
+clean :: String -> String
+clean = \case
+  '-' : s -> '-' : orZero (dropWhile (== '0') s)
+  s       ->       orZero $ dropWhile (== '0') s
+ where
+   orZero :: String -> String
+   orZero n = if null n then "0" else n
 
 modifyPoint :: State -> (String -> String) -> State
 modifyPoint s@State{ pos = (r, c) } f =
-  s & gridL . ix r . ix c %~ asString (orZero . f)
+  s & gridL . ix r . ix c %~ asString (clean . f)
 
 -----------------------------------------------------------------------
 -- Conversions
