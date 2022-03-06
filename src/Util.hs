@@ -6,6 +6,7 @@ module Util (
 ) where
 
 import Control.Monad as Exports
+import Data.Bool     as Exports
 import Data.Maybe    as Exports
 import Lens.Micro    as Exports
 

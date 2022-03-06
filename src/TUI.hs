@@ -5,15 +5,17 @@ module TUI (
 import State
 import Util
 
-import Brick (App (..), BrickEvent (VtyEvent), EventM, Next, Padding (Pad), Widget, attrMap, bg, continue, hBox, hLimit, halt, padLeft, padRight, showFirstCursor, str, vBox, withAttr, vLimit)
+import Brick (App (..), BrickEvent (VtyEvent), EventM, Next, Padding (Pad), Widget, attrMap, bg, continue, fg, hBox, hLimit, halt, padLeft, padRight, showFirstCursor, str, vBox, withAttr)
 import Brick.Widgets.Border (border)
-import Brick.Widgets.Center (hCenter, center)
-import Graphics.Vty (Event (EvKey), Key (..), brightBlack, defAttr)
+import Brick.Widgets.Center (center, hCenter)
+import Graphics.Vty (Event (EvKey), Key (..), brightBlack, brightGreen, brightRed, defAttr)
 
 
-attrDef, attrSel :: Widget n -> Widget n
-attrDef = withAttr "def"
-attrSel = withAttr "selected"
+attrDef, attrSel, attrActive, attrInactive :: Widget n -> Widget n
+attrDef      = withAttr "def"
+attrSel      = withAttr "selected"
+attrActive   = withAttr "active"
+attrInactive = withAttr "inactive"
 
 app :: App State e ()
 app = App
@@ -23,18 +25,21 @@ app = App
   , appStartEvent   = pure
   , appAttrMap      = const . attrMap mempty $
       [ ("selected", bg brightBlack)
-      , ("def"     , defAttr)
+      , ("active"  , fg brightGreen)
+      , ("inactive", fg brightRed  )
+      , ("def"     , defAttr       )
       ]
   }
 
 drawTUI :: State -> [Widget ()]
-drawTUI State{ size, grid, pos, convs } =
-  [center . hLimit (2*mSize + 4) . vLimit 30 . vBox $
-    [hBox [ drawBox . hLimit mSize . vBox . map hCenter $ [drawGuesses grid]
-          , drawBox . vBox $ map (str . show) convs
-          ]
+drawTUI State{ size, grid, pos, convs, useClipboard } =
+  (:[]) . center . hLimit (2*mSize + 8) . attrDef . hBox . map drawBox $
+    [ drawGuesses grid
+    , vBox  $ map (str . show) convs
+           <> [ hBox [str " "]       -- newline
+              , hBox [drawClipboard]
+              ]
     ]
-  ]
  where
   mSize :: Int = uncurry (*) size
 
@@ -54,6 +59,11 @@ drawTUI State{ size, grid, pos, convs } =
      -- Highlight the current focus, but not the border around it.
      in attrDef . pad . attr $ str (show x)
 
+  drawClipboard :: Widget n
+  drawClipboard = bool attrInactive attrActive useClipboard . str $
+    "C: Copy to clipboard: " <> bool "Off" "On" useClipboard
+
+
 handleEvent :: State -> BrickEvent () e -> EventM () (Next State)
 handleEvent s e = case handleConvertEvent s e of
   Just event -> event
@@ -62,6 +72,7 @@ handleEvent s e = case handleConvertEvent s e of
       EvKey (KChar 'q') [] -> halt s           -- catch fire
       -- manipulating the matrix
       EvKey (KChar '-') [] -> continue $ toggleNeg  s
+      EvKey (KChar 'C') [] -> continue $ toggleClipboard s
       EvKey (KChar k)   [] -> continue $ maybe s (`fill` s) (buildMInt k)
       EvKey KRight      [] -> continue $ move East  s
       EvKey KLeft       [] -> continue $ move West  s

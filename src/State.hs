@@ -2,6 +2,7 @@ module State (
   -- * State
   State (..),
   defState,
+  toggleClipboard,
 
   -- * Grid
   Grid,
@@ -50,11 +51,12 @@ asString f = coerce . f . coerce
 type Grid = [[MInt]]
 
 data State = State
-  { size  :: (Int, Int)  -- ^ Size of the matrix in total
-  , pos   :: (Int, Int)  -- ^ Current cursor position
-  , grid  :: Grid        -- ^ *Transposed* entries
-  , convs :: [Convert]
-  , res   :: String
+  { size  :: (Int, Int)   -- ^ Size of the matrix in total
+  , pos   :: (Int, Int)   -- ^ Current cursor position
+  , grid  :: Grid         -- ^ *Transposed* entries
+  , convs :: [Convert]    -- ^ Available conversions
+  , res   :: String       -- ^ Result to return
+  , useClipboard :: Bool  -- ^ Copy result to clipboard?
   } deriving stock (Show)
 
 gridL :: Lens' State Grid
@@ -71,9 +73,14 @@ defState r c = State
   { size  = (r, c)
   , pos   = (0, 0)
   , grid  = replicate c (replicate r (MInt "0"))
-  , res   = ""
   , convs = conversions
+  , res   = ""
+  , useClipboard = True
   }
+
+-- | Toggle whether to copy the end result into the clipboard.
+toggleClipboard :: State -> State
+toggleClipboard s = s{ useClipboard = not $ useClipboard s }
 
 -- | Directions one can move the cursor in
 data Direction2D = North | East | South | West
