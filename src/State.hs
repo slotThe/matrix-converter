@@ -17,14 +17,15 @@ module State (
   toggleNeg,
 
   -- * Converting to other representations
-  toHaskellLists,
-  toPythonMat,
-  toClojureArr,
+  handleConvertEvent,
 ) where
 
-import Data.Coerce (coerce)
-import Data.List (transpose)
 import Util
+
+import Brick (BrickEvent (VtyEvent), EventM, Next, halt)
+import Data.Coerce (coerce)
+import Data.List (transpose, find)
+import Graphics.Vty (Event (EvKey), Key (..))
 
 
 -- | An entry in the matrix; i.e., a "matrix integer".
@@ -49,10 +50,11 @@ asString f = coerce . f . coerce
 type Grid = [[MInt]]
 
 data State = State
-  { size :: (Int, Int)  -- ^ Size of the matrix in total
-  , pos  :: (Int, Int)  -- ^ Current cursor position
-  , grid :: Grid        -- ^ *Transposed* entries
-  , res  :: String
+  { size  :: (Int, Int)  -- ^ Size of the matrix in total
+  , pos   :: (Int, Int)  -- ^ Current cursor position
+  , grid  :: Grid        -- ^ *Transposed* entries
+  , convs :: [Convert]
+  , res   :: String
   } deriving stock (Show)
 
 gridL :: Lens' State Grid
@@ -66,10 +68,11 @@ defState :: Int    -- ^ Number of rows
          -> Int    -- ^ Number of columns
          -> State
 defState r c = State
-  { size = (r, c)
-  , pos  = (0, 0)
-  , grid = replicate c (replicate r (MInt "0"))
-  , res = ""
+  { size  = (r, c)
+  , pos   = (0, 0)
+  , grid  = replicate c (replicate r (MInt "0"))
+  , res   = ""
+  , convs = conversions
   }
 
 -- | Directions one can move the cursor in
@@ -126,14 +129,51 @@ modifyPoint s@State{ pos = (r, c) } f =
 -----------------------------------------------------------------------
 -- Conversions
 
-toHaskellLists :: State -> State
-toHaskellLists s = s & resL .~ showGrid s
+data Convert = Convert
+  { cKey  :: Key
+  , cLang :: String
+  , cCon  :: State -> State
+  }
 
-toPythonMat :: State -> State
-toPythonMat s = s & resL .~ "Matrix(" <> showGrid s <> ")"
+instance Show Convert where
+  show :: Convert -> String
+  show Convert{ cKey, cLang } =
+    (<> ": " <> cLang) $ case cKey of
+                           KChar c -> [c]
+                           k       -> show k
 
-toClojureArr :: State -> State
-toClojureArr s = s & resL .~ replace "," " " (showGrid s)
+conversions :: [Convert]
+conversions = [toClojureArr, toHaskellLists, toPythonMat]
+
+handleConvertEvent :: State -> BrickEvent () e -> Maybe (EventM () (Next State))
+handleConvertEvent s@State{ convs } = \case
+  VtyEvent ve -> case ve of
+    EvKey c [] -> case find ((== c) . cKey) convs of
+      Just Convert{ cCon } -> Just $ halt (cCon s)
+      _ -> Nothing
+    _ -> Nothing
+  _ -> Nothing
+
+toHaskellLists :: Convert
+toHaskellLists = Convert
+  { cKey  = KChar 'h'
+  , cLang = "Haskell"
+  , cCon  = \s -> s & resL .~ showGrid s
+  }
+
+toPythonMat :: Convert
+toPythonMat = Convert
+  { cKey  = KChar 'p'
+  , cLang = "Python"
+  , cCon  = \s -> s & resL .~ "Matrix(" <> showGrid s <> ")"
+  }
+
+toClojureArr :: Convert
+toClojureArr = Convert
+  { cKey  = KChar 'c'
+  , cLang = "Clojure"
+  , cCon  = \s -> s & resL .~ replace "," " " (showGrid s)
+  }
 
 showGrid :: State -> String
 showGrid = show . transpose . grid
