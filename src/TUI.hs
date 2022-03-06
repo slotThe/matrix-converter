@@ -33,15 +33,15 @@ app = App
 
 drawTUI :: State -> [Widget ()]
 drawTUI State{ size, grid, pos, convs, useClipboard } =
-  (:[]) . center . hLimit (2*mSize + 8) . attrDef . hBox . map drawBox $
-    [ drawGuesses grid
-    , vBox  $ map (str . show) convs
+  (:[]) . center . attrDef . hLimit (mSize + 31) . hBox $
+    [ hLimit mSize . drawBox $ drawGuesses grid
+    , hLimit 31 . drawBox . vBox  $ map (str . show) convs
            <> [ hBox [str " "]       -- newline
               , hBox [drawClipboard]
               ]
     ]
  where
-  mSize :: Int = uncurry (*) size
+  mSize :: Int = max 15 (5 * fst size + 4)
 
   drawBox :: Widget n -> Widget n
   drawBox = border . pad . hCenter
