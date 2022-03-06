@@ -49,6 +49,11 @@ handleEvent :: State -> BrickEvent () e -> EventM () (Next State)
 handleEvent s = \case
   VtyEvent ve -> case ve of
     EvKey (KChar 'q') [] -> halt s           -- catch fire
+    -- conversions; TODO: separate visible "menu" for these
+    EvKey (KChar 'h') [] -> halt $ toHaskellLists s
+    EvKey (KChar 'p') [] -> halt $ toPythonMat    s
+    EvKey (KChar 'c') [] -> halt $ toClojureArr   s
+    -- manipulating the matrix
     EvKey (KChar k)   [] -> continue $ maybe s (`fill` s) (buildMInt k)
     EvKey KRight      [] -> continue $ move East  s
     EvKey KLeft       [] -> continue $ move West  s

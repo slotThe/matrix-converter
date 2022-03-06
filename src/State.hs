@@ -14,10 +14,16 @@ module State (
   move,
   del,
   fill,
+
+  -- * Converting to other representations
+  toHaskellLists,
+  toPythonMat,
+  toClojureArr,
 ) where
 
+import Data.Coerce (coerce)
+import Data.List (transpose)
 import Util
-import Data.Coerce
 
 
 -- | An entry in the matrix; i.e., a "matrix integer".
@@ -44,11 +50,15 @@ type Grid = [[MInt]]
 data State = State
   { size :: (Int, Int)  -- ^ Size of the matrix in total
   , pos  :: (Int, Int)  -- ^ Current cursor position
-  , grid :: Grid        -- ^ Entries
+  , grid :: Grid        -- ^ *Transposed* entries
+  , res  :: String
   } deriving stock (Show)
 
 gridL :: Lens' State Grid
 gridL = lens grid (\s g -> s{ grid = g })
+
+resL :: Lens' State String
+resL = lens res (\s g -> s{ res = g })
 
 -- | Starting state is the zero matrix.
 defState :: Int    -- ^ Number of rows
@@ -58,6 +68,7 @@ defState r c = State
   { size = (r, c)
   , pos  = (0, 0)
   , grid = replicate c (replicate r (MInt "0"))
+  , res = ""
   }
 
 -- | Directions one can move the cursor in
@@ -99,3 +110,18 @@ orZero num = if null num then "0" else num
 modifyPoint :: State -> (String -> String) -> State
 modifyPoint s@State{ pos = (r, c) } f =
   s & gridL . ix r . ix c %~ asString (orZero . f)
+
+-----------------------------------------------------------------------
+-- Conversions
+
+toHaskellLists :: State -> State
+toHaskellLists s = s & resL .~ showGrid s
+
+toPythonMat :: State -> State
+toPythonMat s = s & resL .~ "Matrix(" <> showGrid s <> ")"
+
+toClojureArr :: State -> State
+toClojureArr s = s & resL .~ replace "," " " (showGrid s)
+
+showGrid :: State -> String
+showGrid = show . transpose . grid

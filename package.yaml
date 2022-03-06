@@ -27,6 +27,7 @@ default-extensions:
   - DerivingStrategies
   - GeneralizedNewtypeDeriving
   - InstanceSigs
+  - ScopedTypeVariables
 
 dependencies:
   - base

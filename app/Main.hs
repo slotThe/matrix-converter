@@ -14,4 +14,4 @@ main = do
     [r, c] -> pure . fromMaybe (3, 3) $ both readMaybe (r, c)
     _      -> errorWithoutStackTrace "Please insert the number of rows \
                                      \and columns as positional arguments."
-  void $ defaultMain app (defState rows cols)
+  putStrLn . res =<< defaultMain app (defState rows cols)
