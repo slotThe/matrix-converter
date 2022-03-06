@@ -5,6 +5,13 @@ import TUI
 import Util
 
 import Brick (defaultMain)
+import System.Environment (getArgs)
+import Text.Read (readMaybe)
 
 main :: IO ()
-main = void $ defaultMain app defState
+main = do
+  (rows, cols) <- getArgs >>= \case
+    [r, c] -> pure . fromMaybe (3, 3) $ both readMaybe (r, c)
+    _      -> errorWithoutStackTrace "Please insert the number of rows \
+                                     \and columns as positional arguments."
+  void $ defaultMain app (defState rows cols)

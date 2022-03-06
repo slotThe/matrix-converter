@@ -4,6 +4,7 @@ module Util (
 ) where
 
 import Control.Monad as Exports
+import Data.Maybe    as Exports
 import Lens.Micro    as Exports
 
 -- | Like 'map', but indexed.

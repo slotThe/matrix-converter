@@ -47,15 +47,17 @@ data State = State
   , grid :: Grid        -- ^ Entries
   } deriving stock (Show)
 
-gridL :: Lens State State Grid Grid
+gridL :: Lens' State Grid
 gridL = lens grid (\s g -> s{ grid = g })
 
 -- | Starting state is the zero matrix.
-defState :: State
-defState = State
-  { size = (3, 3)                          -- TODO: CLI args or separate TUI window for size
+defState :: Int    -- ^ Number of rows
+         -> Int    -- ^ Number of columns
+         -> State
+defState r c = State
+  { size = (r, c)
   , pos  = (0, 0)
-  , grid = replicate 3 (replicate 3 (MInt "0"))
+  , grid = replicate c (replicate r (MInt "0"))
   }
 
 -- | Directions one can move the cursor in
