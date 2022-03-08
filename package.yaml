@@ -1,10 +1,10 @@
 name:                matrix
 version:             0.0.1
-synopsis:            TODO
+synopsis:            Quickly generate matrices and copy them to other formats
 license:             GPL-3
 author:              Solid
 maintainer:          soliditsallgood@mailbox.org
-homepage:            TODO
+homepage:            https://gitlab.com/slotThe/matrix-converter
 
 ghc-options:
   -Weverything

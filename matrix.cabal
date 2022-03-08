@@ -4,12 +4,12 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b56c6016485c693c513f4a5a8d496cc1531c72d3c6313b99184679b7bb31b354
+-- hash: 57a8f35536067321ad4f080a0b202f2f59b8eca93c7867e42bf35e09c9670242
 
 name:                matrix
 version:             0.0.1
-synopsis:            TODO
-homepage:            TODO
+synopsis:            Quickly generate matrices and copy them to other formats
+homepage:            https://gitlab.com/slotThe/matrix-converter
 license:             GPL-3
 license-file:        LICENSE
 author:              Solid
