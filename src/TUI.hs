@@ -9,6 +9,7 @@ import Brick (App (..), BrickEvent (VtyEvent), EventM, Next, Padding (Pad), Widg
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Center (center, hCenter)
 import Graphics.Vty (Event (EvKey), Key (..), brightBlack, brightGreen, brightRed, defAttr)
+import GHC.Exts (toList)
 
 
 attrDef, attrSel, attrActive, attrInactive :: Widget n -> Widget n
@@ -35,10 +36,10 @@ drawTUI :: State -> [Widget ()]
 drawTUI State{ size, grid, pos, convs, useClipboard } =
   (:[]) . center . attrDef . hLimit (mSize + 31) . hBox $
     [ hLimit mSize . drawBox $ drawGuesses grid
-    , hLimit 31 . drawBox . vBox  $ map (str . show) convs
-           <> [ hBox [str " "]       -- newline
-              , hBox [drawClipboard]
-              ]
+    , hLimit 31 . drawBox . vBox  $ map (str . convToString) (toList convs)
+                                 <> [ hBox [str " "]       -- newline
+                                    , hBox [drawClipboard]
+                                    ]
     ]
  where
   mSize :: Int = max 15 (5 * fst size + 4)

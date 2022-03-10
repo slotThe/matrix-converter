@@ -19,13 +19,16 @@ module State (
 
   -- * Converting to other representations
   handleConvertEvent,
+  convToString,
 ) where
 
 import Util
 
 import Brick (BrickEvent (VtyEvent), EventM, Next, halt)
 import Data.Coerce (coerce)
-import Data.List (transpose, find)
+import Data.List (transpose)
+import Data.Map.Strict (Map, (!?))
+import GHC.Exts (fromList)
 import Graphics.Vty (Event (EvKey), Key (..))
 
 
@@ -50,14 +53,18 @@ asString f = coerce . f . coerce
 -- | Our grid of numbers.
 type Grid = [[MInt]]
 
+-- | Possible conversions (to different formats) and their associated
+-- keys.
+type Conversions = Map Key Convert
+
 data State = State
   { size  :: (Int, Int)   -- ^ Size of the matrix in total
   , pos   :: (Int, Int)   -- ^ Current cursor position
   , grid  :: Grid         -- ^ *Transposed* entries
-  , convs :: [Convert]    -- ^ Available conversions
+  , convs :: Conversions  -- ^ Available conversions
   , res   :: String       -- ^ Result to return
   , useClipboard :: Bool  -- ^ Copy result to clipboard?
-  } deriving stock (Show)
+  }
 
 gridL :: Lens' State Grid
 gridL = lens grid (\s g -> s{ grid = g })
@@ -137,50 +144,47 @@ modifyPoint s@State{ pos = (r, c) } f =
 -- Conversions
 
 data Convert = Convert
-  { cKey  :: Key
-  , cLang :: String
+  { cLang :: String
   , cCon  :: State -> State
   }
 
-instance Show Convert where
-  show :: Convert -> String
-  show Convert{ cKey, cLang } =
-    (<> ": " <> cLang) $ case cKey of
-                           KChar c -> [c]
-                           k       -> show k
+convToString :: (Key, Convert) -> String
+convToString (k, Convert{cLang}) =
+  (<> ": " <> cLang) $ case k of
+                         KChar c -> [c]
+                         _       -> show k
 
-conversions :: [Convert]
-conversions = [toClojureArr, toHaskellLists, toPythonMat]
+conversions :: Conversions
+conversions = fromList
+  [ (KChar 'c', toClojureArr  )
+  , (KChar 'h', toHaskellLists)
+  , (KChar 'p', toPythonMat   )
+  ]
+ where
+  toHaskellLists :: Convert
+  toHaskellLists =
+    Convert { cLang = "Haskell"
+            , cCon = \s -> s & resL .~ showGrid s
+            }
+  toPythonMat :: Convert
+  toPythonMat =
+    Convert { cLang = "Python"
+            , cCon  = \s -> s & resL .~ "Matrix(" <> showGrid s <> ")"
+            }
+  toClojureArr :: Convert
+  toClojureArr =
+    Convert { cLang = "Clojure"
+            , cCon  = \s -> s & resL .~ replace "," " " (showGrid s)
+            }
 
 handleConvertEvent :: State -> BrickEvent () e -> Maybe (EventM () (Next State))
 handleConvertEvent s@State{ convs } = \case
   VtyEvent ve -> case ve of
-    EvKey c [] -> case find ((== c) . cKey) convs of
+    EvKey c [] -> case convs !? c of
       Just Convert{ cCon } -> Just $ halt (cCon s)
       _ -> Nothing
     _ -> Nothing
   _ -> Nothing
-
-toHaskellLists :: Convert
-toHaskellLists = Convert
-  { cKey  = KChar 'h'
-  , cLang = "Haskell"
-  , cCon  = \s -> s & resL .~ showGrid s
-  }
-
-toPythonMat :: Convert
-toPythonMat = Convert
-  { cKey  = KChar 'p'
-  , cLang = "Python"
-  , cCon  = \s -> s & resL .~ "Matrix(" <> showGrid s <> ")"
-  }
-
-toClojureArr :: Convert
-toClojureArr = Convert
-  { cKey  = KChar 'c'
-  , cLang = "Clojure"
-  , cCon  = \s -> s & resL .~ replace "," " " (showGrid s)
-  }
 
 showGrid :: State -> String
 showGrid = show . transpose . grid
