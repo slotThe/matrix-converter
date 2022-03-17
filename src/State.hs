@@ -26,7 +26,7 @@ import Util
 
 import Brick (BrickEvent (VtyEvent), EventM, Next, halt)
 import Data.Coerce (coerce)
-import Data.List (transpose)
+import Data.List (intersperse, transpose)
 import Data.Map.Strict (Map, (!?))
 import GHC.Exts (fromList)
 import Graphics.Vty (Event (EvKey), Key (..))
@@ -158,6 +158,7 @@ conversions :: Conversions
 conversions = fromList
   [ (KChar 'c', toClojureArr  )
   , (KChar 'h', toHaskellLists)
+  , (KChar 'l', toPMatrix     )
   , (KChar 'p', toPythonMat   )
   ]
  where
@@ -176,6 +177,11 @@ conversions = fromList
     Convert { cLang = "Clojure"
             , cCon  = \s -> s & resL .~ replace "," " " (showGrid s)
             }
+  toPMatrix :: Convert
+  toPMatrix =
+    Convert { cLang = "LaTeX (pmatrix)"
+            , cCon  = \s -> s & resL .~ toLaTeX s
+            }
 
 handleConvertEvent :: State -> BrickEvent () e -> Maybe (EventM () (Next State))
 handleConvertEvent s@State{ convs } = \case
@@ -185,6 +191,14 @@ handleConvertEvent s@State{ convs } = \case
       _ -> Nothing
     _ -> Nothing
   _ -> Nothing
+
+toLaTeX :: State -> String
+toLaTeX State{ grid }
+  =  "\\begin{pmatrix}\n"
+  <> unlines (map (("  " <>) . (<> " \\\\") . unwords . intersperse "&") mat)
+  <> "\\end{pmatrix}"
+ where
+  mat :: [[String]] = coerce (transpose grid)
 
 showGrid :: State -> String
 showGrid = show . transpose . grid
