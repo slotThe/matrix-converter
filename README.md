@@ -1,7 +1,7 @@
 # matrix
 
 Small program to generate matrices and copy them to one of several
-predefined formats.
+[predefined formats](#currently-supported-formats).
 
 By default, finished entries are copied to the system clipboard and spat
 out to stdout.
