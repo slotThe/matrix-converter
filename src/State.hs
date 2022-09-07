@@ -104,7 +104,7 @@ move d s@State{ pos = (pr, pc), size = (r, c) } = s{ pos = go }
     North -> (pr    , pc - 1)
 
   wrap :: (Int, Int) -> (Int, Int)
-  wrap (ew, ns) = (ew `mod` r, ns `mod` c)
+  wrap (ew, ns) = (ew `mod` c, ns `mod` r)
 
 -- | Places one can delete things from.
 data Direction1D = Front | Back
