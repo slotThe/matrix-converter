@@ -5,26 +5,27 @@ module TUI (
 import State
 import Util
 
-import Brick (App (..), BrickEvent (VtyEvent), EventM, Next, Padding (Pad), Widget, attrMap, bg, continue, fg, hBox, hLimit, halt, padLeft, padRight, showFirstCursor, str, vBox, withAttr)
+import Brick (App (..), BrickEvent (VtyEvent), EventM, Padding (Pad), Widget, attrMap, bg, fg, gets, hBox, hLimit, halt, modify, padLeft, padRight, showFirstCursor, str, vBox, withAttr)
+import Brick.AttrMap (attrName)
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Center (center, hCenter)
-import Graphics.Vty (Event (EvKey), Key (..), brightBlack, brightGreen, brightRed, defAttr)
+import Control.Arrow (first)
 import GHC.Exts (toList)
-
+import Graphics.Vty (Event (EvKey), Key (..), brightBlack, brightGreen, brightRed, defAttr)
 
 attrDef, attrSel, attrActive, attrInactive :: Widget n -> Widget n
-attrDef      = withAttr "def"
-attrSel      = withAttr "selected"
-attrActive   = withAttr "active"
-attrInactive = withAttr "inactive"
+attrDef      = withAttr $ attrName "def"
+attrSel      = withAttr $ attrName "selected"
+attrActive   = withAttr $ attrName "active"
+attrInactive = withAttr $ attrName "inactive"
 
 app :: App State e ()
 app = App
   { appDraw         = drawTUI
   , appChooseCursor = showFirstCursor
   , appHandleEvent  = handleEvent
-  , appStartEvent   = pure
-  , appAttrMap      = const . attrMap mempty $
+  , appStartEvent   = pure ()
+  , appAttrMap      = const . attrMap defAttr . map (first attrName) $
       [ ("selected", bg brightBlack)
       , ("active"  , fg brightGreen)
       , ("inactive", fg brightRed  )
@@ -42,7 +43,7 @@ drawTUI State{ size, grid, pos, convs, useClipboard } =
                                     ]
     ]
  where
-  mSize :: Int = max 15 (5 * fst size + 4)
+  mSize :: Int = max 15 (4 * snd size)
 
   drawBox :: Widget n -> Widget n
   drawBox = border . pad . hCenter
@@ -65,21 +66,21 @@ drawTUI State{ size, grid, pos, convs, useClipboard } =
     "C: Copy to clipboard: " <> bool "Off" "On" useClipboard
 
 
-handleEvent :: State -> BrickEvent () e -> EventM () (Next State)
-handleEvent s e = case handleConvertEvent s e of
-  Just event -> event
-  Nothing    -> case e of
+handleEvent :: BrickEvent () e -> EventM () State ()
+handleEvent e = do
+  gets convs >>= \c -> handleConvertEvent c e
+  case e of
     VtyEvent ve -> case ve of
-      EvKey (KChar 'q') [] -> halt s           -- catch fire
-      -- manipulating the matrix
-      EvKey (KChar '-') [] -> continue $ toggleNeg  s
-      EvKey (KChar 'C') [] -> continue $ toggleClipboard s
-      EvKey (KChar k)   [] -> continue $ maybe s (`fill` s) (buildMInt k)
-      EvKey KRight      [] -> continue $ move East  s
-      EvKey KLeft       [] -> continue $ move West  s
-      EvKey KUp         [] -> continue $ move North s
-      EvKey KDown       [] -> continue $ move South s
-      EvKey KBS         [] -> continue $ del  Back  s
-      EvKey KDel        [] -> continue $ del  Front s
-      _                    -> continue s
-    _ -> continue s
+      EvKey (KChar 'q') [] -> halt        -- catch fire
+      _ -> modify case ve of              -- again for modify
+        EvKey (KChar '-') [] -> toggleNeg
+        EvKey (KChar 'C') [] -> toggleClipboard
+        EvKey (KChar k)   [] -> maybe id fill (buildMInt k)
+        EvKey KRight      [] -> move East
+        EvKey KLeft       [] -> move West
+        EvKey KUp         [] -> move North
+        EvKey KDown       [] -> move South
+        EvKey KBS         [] -> del  Back
+        EvKey KDel        [] -> del  Front
+        _                    -> id
+    _ -> pure ()

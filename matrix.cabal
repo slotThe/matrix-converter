@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.5.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2a34bc9b4ab43683cc8f17474fef643ba5468ba02065c685d7377c7b605a0992
+-- hash: 7d6580ce341e198c75aca0b0f0c680d49a3a28d32e558fcb9b669e92395b387f
 
 name:                matrix
 version:             0.0.1
@@ -35,7 +35,7 @@ library
       GeneralizedNewtypeDeriving
       InstanceSigs
       ScopedTypeVariables
-  ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-prepositive-qualified-module -O2
+  ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-prepositive-qualified-module -Wno-missing-kind-signatures -O2
   build-depends:
       Clipboard
     , base
@@ -58,7 +58,7 @@ executable matrix
       GeneralizedNewtypeDeriving
       InstanceSigs
       ScopedTypeVariables
-  ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-prepositive-qualified-module -O2 -threaded -with-rtsopts=-N
+  ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-prepositive-qualified-module -Wno-missing-kind-signatures -O2 -threaded -with-rtsopts=-N
   main-is: Main.hs
   other-modules:
       Paths_matrix

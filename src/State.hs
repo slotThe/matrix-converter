@@ -24,7 +24,7 @@ module State (
 
 import Util
 
-import Brick (BrickEvent (VtyEvent), EventM, Next, halt)
+import Brick (BrickEvent (VtyEvent), EventM, halt, modify)
 import Data.Coerce (coerce)
 import Data.List (intersperse, transpose)
 import Data.Map.Strict (Map, (!?))
@@ -183,14 +183,14 @@ conversions = fromList
             , cCon  = \s -> s & resL .~ toLaTeX s
             }
 
-handleConvertEvent :: State -> BrickEvent () e -> Maybe (EventM () (Next State))
-handleConvertEvent s@State{ convs } = \case
+handleConvertEvent :: Conversions -> BrickEvent () e -> EventM () State ()
+handleConvertEvent convs = \case
   VtyEvent ve -> case ve of
     EvKey c [] -> case convs !? c of
-      Just Convert{ cCon } -> Just $ halt (cCon s)
-      _ -> Nothing
-    _ -> Nothing
-  _ -> Nothing
+      Just Convert{ cCon } -> modify cCon >> halt
+      _ -> pure ()
+    _ -> pure ()
+  _ -> pure ()
 
 toLaTeX :: State -> String
 toLaTeX State{ grid }

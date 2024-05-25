@@ -16,6 +16,7 @@ ghc-options:
   -Wno-unsafe
   -Wno-safe
   -Wno-prepositive-qualified-module
+  -Wno-missing-kind-signatures
   -O2
 
 default-extensions:
