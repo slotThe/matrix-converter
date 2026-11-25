@@ -1,5 +1,9 @@
 # matrix
 
+> [!IMPORTANT]
+>
+> [Moved to Codeberg](https://codeberg.org/slotThe/matrix-converter)
+
 Small program to generate matrices and copy them to one of several
 [predefined formats](#currently-supported-formats).
 
